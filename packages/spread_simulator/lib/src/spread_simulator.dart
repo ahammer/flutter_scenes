@@ -24,7 +24,7 @@ class _SpreadSimulatorState extends State<SpreadSimulator> {
 
 class SpreadSimulatorPainter extends AnimatedPainter {
   final double diseaseTime;
-  
+
   int lastTime = DateTime.now().millisecondsSinceEpoch;
   Field field = Field();
 
@@ -52,16 +52,38 @@ class Field {
 
   Field({this.diseaseTime = 5, this.count = 250});
 
-
   void step(double deltaTime) {
     if (particles == null) {
-            particles = List.generate(count, (idx) => Particle()..infected = idx == 0 ? diseaseTime : null);
+      particles = List.generate(
+          count, (idx) => Particle()..infected = idx == 0 ? diseaseTime : null);
     }
     particles.forEach((particle) {
       particles.where((p) => p != particle).forEach((other) {
-        if (particle.potentialCollsion(other)) {
-          particle.reverse();
-          other.reverse();
+        if (particle.collision(other)) {
+          /// Calculate new XS/YS after a collision
+          final particleXS = (particle.xs * (particle.mass - other.mass) +
+                  (2 * other.mass * other.xs)) /
+              (particle.mass + other.mass);
+
+          final particleYS = (particle.ys * (particle.mass - other.mass) +
+                  (2 * other.mass * other.ys)) /
+              (particle.mass + other.mass);
+
+          final otherXs = (other.xs * (other.mass - particle.mass) +
+                  (2 * particle.mass * particle.xs)) /
+              (other.mass + particle.mass);
+
+          final otherYs = (other.ys * (other.mass - particle.mass) +
+                  (2 * particle.mass * particle.ys)) /
+              (other.mass + particle.mass);
+
+          particle.xs = particleXS;
+          particle.ys = particleYS;
+          other.xs = otherXs;
+          other.ys = otherYs;
+          particle.step(particle._lastDelta);
+          other.step(particle._lastDelta);
+
           if (particle.infected != null && particle.infected > 0 ||
               other.infected != null && other.infected > 0) {
             if (particle.infected == null) particle.infected = diseaseTime;
@@ -116,8 +138,9 @@ class Particle {
   double get radius => sqrt(mass / pi);
   bool willDie = Random().nextDouble() < 0.03;
   bool get isDead => infected != null && infected < 0 && willDie;
+  double get momentum => sqrt(xs * xs + ys * ys);
 
-  bool potentialCollsion(Particle other) {
+  bool collision(Particle other) {
     final dx = x - other.x;
     final dy = y - other.y;
     final total_radius = radius + other.radius;
