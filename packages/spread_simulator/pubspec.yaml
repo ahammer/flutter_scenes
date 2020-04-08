@@ -23,10 +23,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  animated_painter:
+    git: 
+      url: https://github.com/ahammer/flutter_scenes
+      path: packages/animated_painter
+      ref: master
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
+
+dependency_overrides:
+  animated_painter:
+   path: ../animated_painter
 
 dev_dependencies:
   flutter_test:
