@@ -149,7 +149,7 @@ class SpreadSimulatorPainter extends AnimatedPainter {
   final double speed;
   final double scale;
   double statisticSampleTime = 0;
-
+  double overlayAlpha = 0.8;
   int lastTime = DateTime.now().millisecondsSinceEpoch;
   Field field;
   final history = <Statistics>[];
@@ -201,7 +201,7 @@ class SpreadSimulatorPainter extends AnimatedPainter {
     canvas.drawRect(
         bounds,
         Paint()
-          ..color = Colors.white.withOpacity(0.75)
+          ..color = Colors.white.withOpacity(overlayAlpha)
           ..style = PaintingStyle.fill);
 
     field
@@ -216,6 +216,8 @@ class SpreadSimulatorPainter extends AnimatedPainter {
         history.add(stats);
       }
     } else {
+      //Begin the fade
+      overlayAlpha *= 0.99;
       field.particles.forEach((p)=>p.mass *= 0.99);
     }
 
