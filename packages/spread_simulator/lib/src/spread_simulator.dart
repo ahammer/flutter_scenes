@@ -5,6 +5,11 @@ import 'package:flutter/material.dart';
 
 const kHistorySampleSizeS = 0.5;
 
+const kColorHealth = Colors.greenAccent;
+const kColorSick = Colors.red;
+const kColorDead = Colors.black;
+const kColorRecovered = Colors.blue;
+
 class SpreadSimulator extends StatefulWidget {
   @override
   _SpreadSimulatorState createState() => _SpreadSimulatorState();
@@ -162,31 +167,62 @@ class SpreadSimulatorPainter extends AnimatedPainter {
     final currentTime = DateTime.now().millisecondsSinceEpoch;
     final deltaTime = (currentTime - lastTime) / 1000.0;
 
+    double width = min(size.width, size.height);
+    double height = width;
+    double offsetHeight = (size.height - height) / 2;
+    double offsetWidth = (size.width - width) / 2;
+    final bounds = Rect.fromCenter(
+        width: width,
+        height: height,
+        center: Offset(width / 2 + offsetWidth, height / 2 + offsetHeight));
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(bounds, Radius.circular(32)),
+        Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4);
+
+              canvas.drawRRect(
+        RRect.fromRectAndRadius(bounds, Radius.circular(32)),
+        Paint()
+          ..color = Colors.green
+          ..style = PaintingStyle.fill
+          ..strokeWidth = 4);
+
+    canvas.clipRRect(RRect.fromRectAndRadius(bounds, Radius.circular(32)));
+
     lastTime = currentTime;
     drawGraph(canvas, size);
+    canvas.drawRect(
+        bounds,
+        Paint()
+          ..color = Colors.white.withOpacity(0.75)
+          ..style = PaintingStyle.fill);
 
     field
       ..step(deltaTime)
       ..paint(canvas, size);
 
     final stats = Statistics(field.particles);
-    statisticSampleTime -= deltaTime;
-    if (statisticSampleTime < 0 && stats.infected > 0) {
-      statisticSampleTime += kHistorySampleSizeS;
-      history.add(stats);
+    if (stats.infected > 0) {
+      statisticSampleTime -= deltaTime;
+      if (statisticSampleTime < 0) {
+        statisticSampleTime += kHistorySampleSizeS;
+        history.add(stats);
+      }
     }
 
-    double width = min(size.width, size.height);
-    double offsetWidth = (size.width - width) / 2;
     final tp = TextPainter(
         textDirection: TextDirection.ltr,
         text: TextSpan(
           text:
               "[Uninfected ${stats.uninfected}]      [Infected ${stats.infected}]      [Dead ${stats.dead}]      [Recovered ${stats.clear}]     [InfectionTime: ${(history.length * kHistorySampleSizeS).toInt()}s]",
           style: TextStyle(
-            
               color: Colors.white,
-              shadows: [BoxShadow(blurRadius: 4),BoxShadow(blurRadius: 8),],
+              shadows: [
+                BoxShadow(blurRadius: 4),
+                BoxShadow(blurRadius: 8),
+              ],
               fontSize: width / 60,
               fontWeight: FontWeight.bold),
         ))
@@ -216,7 +252,8 @@ class SpreadSimulatorPainter extends AnimatedPainter {
     clearPoints.add(Offset(offsetWidth, height + offsetHeight));
 
     history.forEach((element) {
-      double p = i / (history.length - 1);
+      double p =
+          i / (history.length - 1 - statisticSampleTime / kHistorySampleSizeS);
       double infectedPercent = element.infected / count;
       double deadPercent = element.dead / count;
       double clearPercent = element.clear / count;
@@ -241,22 +278,21 @@ class SpreadSimulatorPainter extends AnimatedPainter {
     deadPath.addPolygon(deadPoints, true);
     clearPath.addPolygon(clearPoints, true);
 
-    //canvas.drawRect(Rect.fromCenter(center:Offset(width/2 + offsetWidth, height/2 + offsetHeight), width: width, height:height), Paint()..color = Colors.lightGreen);
     canvas.drawPath(
         clearPath,
         Paint()
           ..style = PaintingStyle.fill
-          ..color = Colors.lightBlue.withOpacity(0.5));
+          ..color = kColorRecovered);
     canvas.drawPath(
         deadPath,
         Paint()
           ..style = PaintingStyle.fill
-          ..color = Colors.grey);
+          ..color = kColorDead);
     canvas.drawPath(
         infectedPath,
         Paint()
           ..style = PaintingStyle.fill
-          ..color = Color.fromARGB(255, 255, 200, 200));
+          ..color = kColorSick);
   }
 }
 
@@ -327,17 +363,6 @@ class Field {
     double height = width;
     double offsetHeight = (size.height - height) / 2;
     double offsetWidth = (size.width - width) / 2;
-    final bounds = Rect.fromCenter(
-        width: width,
-        height: height,
-        center: Offset(width / 2 + offsetWidth, height / 2 + offsetHeight));
-    canvas.drawRect(
-        bounds,
-        Paint()
-          ..color = Colors.black
-          ..style = PaintingStyle.stroke);
-    
-    canvas.clipRect(bounds);
 
     particles.forEach((particle) {
       canvas.drawOval(
@@ -348,10 +373,10 @@ class Field {
               height: particle.radius * height * 2),
           Paint()
             ..color = particle.isDead
-                ? Colors.black
+                ? kColorDead
                 : particle.infected != null
-                    ? particle.infected > 0 ? Colors.red : Colors.lightGreen
-                    : Color.fromARGB(255,0,128,0));
+                    ? particle.infected > 0 ? kColorSick : kColorRecovered
+                    : Color.fromARGB(255, 0, 128, 0));
     });
   }
 }
