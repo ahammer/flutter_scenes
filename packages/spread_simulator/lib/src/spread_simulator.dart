@@ -34,6 +34,7 @@ class _SpreadSimulatorState extends State<SpreadSimulator> {
         appBar: AppBar(
           title: Text("Infection Simulator"),
         ),
+        floatingActionButton: FloatingActionButton(onPressed: reset, child: Icon(Icons.replay),),
         drawer: buildOptions(),
         body: SafeArea(
           child: Column(children: [
