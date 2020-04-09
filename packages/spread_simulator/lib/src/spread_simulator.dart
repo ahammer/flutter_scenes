@@ -162,6 +162,7 @@ class SpreadSimulatorPainter extends AnimatedPainter {
     if (field == null) {
       field = Field(
           diseaseTime: diseaseTime, count: count, speed: speed, scale: scale);
+      field.step(2);
     }
 
     final currentTime = DateTime.now().millisecondsSinceEpoch;
@@ -182,7 +183,7 @@ class SpreadSimulatorPainter extends AnimatedPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4);
 
-              canvas.drawRRect(
+    canvas.drawRRect(
         RRect.fromRectAndRadius(bounds, Radius.circular(32)),
         Paint()
           ..color = Colors.green
@@ -375,7 +376,10 @@ class Field {
             ..color = particle.isDead
                 ? kColorDead
                 : particle.infected != null
-                    ? particle.infected > 0 ? kColorSick : kColorRecovered
+                    ? particle.infected > 0
+                        ? kColorSick.withOpacity(
+                            sin(particle.infected * 2 * pi).abs() / 3 + 0.66)
+                        : kColorRecovered
                     : Color.fromARGB(255, 0, 128, 0));
     });
   }
