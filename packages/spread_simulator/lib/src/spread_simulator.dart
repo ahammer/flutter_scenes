@@ -176,6 +176,7 @@ class SpreadSimulatorPainter extends AnimatedPainter {
         width: width,
         height: height,
         center: Offset(width / 2 + offsetWidth, height / 2 + offsetHeight));
+
     canvas.drawRRect(
         RRect.fromRectAndRadius(bounds, Radius.circular(32)),
         Paint()
@@ -211,6 +212,8 @@ class SpreadSimulatorPainter extends AnimatedPainter {
         statisticSampleTime += kHistorySampleSizeS;
         history.add(stats);
       }
+    } else {
+      field.particles.forEach((p)=>p.mass *= 0.99);
     }
 
     final tp = TextPainter(
