@@ -96,7 +96,10 @@ class _SpreadSimulatorState extends State<SpreadSimulator> {
               ),
             ),
             FlatButton(
-              onPressed: reset,
+              onPressed: (){
+                Navigator.of(context).pop();
+                reset();
+              },
               child: Text("Reset"),
             ),
           ],
@@ -129,8 +132,7 @@ class _SpreadSimulatorState extends State<SpreadSimulator> {
     });
   }
 
-  void reset() {
-    Navigator.of(context).pop();
+  void reset() {        
     setState(() {
       painter = SpreadSimulatorPainter(
           diseaseTime: diseaseTime,
